@@ -10,14 +10,10 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
     restart: unless-stopped
-    ports:
-      - "5432:5432"
 
   api:
     build: ./api
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     environment:
       PGUSER: 'postgres'
       PGPASSWORD: 'mypassword'
