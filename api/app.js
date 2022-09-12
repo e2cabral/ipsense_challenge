@@ -3,31 +3,27 @@ var app = express();
 var uuid = require('node-uuid');
 var logger = require('morgan');
 
-var pg = require('pg');
+var { Client } = require('pg');
 var conString = process.env.DB; // "postgres://username:password@localhost/database";
 
 app.use(logger('dev'));
 
 // Routes
 app.get('/api/status', function(req, res) {
-  pg.connect(conString, function(err, client, done) {
-    if(err) {
-      return res.status(500).send('error fetching client from pool');
-    }
-    client.query('SELECT now() as time', [], function(err, result) {
-      //call `done()` to release the client back to the pool
-      done();
-
-      if(err) {
-        return res.status(500).send('error running query');
-      }
-
-      return res.json({
-        request_uuid: uuid.v4(),
-        time: result.rows[0].time
-      });
-    });
+  var client = new Client({
+    user: process.env.PGUSER,
+    host: process.env.PGHOST,
+    database: process.env.PGDATABASE,
+    password: process.env.PGPASSWORD,
+    port: process.env.PGPORT,
   });
+
+  client.connect()
+
+  client
+      .query('SELECT NOW() as time')
+      .then((result) => res.json({ request_uuid: uuid.v4(), time: result.rows[0].time }))
+      .catch((err) => console.log(err.message));
 });
 
 // catch 404 and forward to error handler
