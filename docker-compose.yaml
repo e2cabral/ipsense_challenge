@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:alpine
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_DB: 'postgres'
+      POSTGRES_PASSWORD: "mypassword"
+    volumes:
+      - db:/var/lib/postgresql/data
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+
+  api:
+    build: ./api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PGUSER: 'postgres'
+      PGPASSWORD: 'mypassword'
+      PGHOST: 'db'
+      PGDATABASE: 'postgres'
+      PGPORT: '5432'
+      PORT: '3000'
+    links:
+      - db
+
+  web:
+    build: ./web
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      API_HOST: 'http://api:3000'
+    links:
+      - api
+
+volumes:
+  db:
